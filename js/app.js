@@ -246,6 +246,7 @@ function viewAuth(mode) {
       <form id="auth-form">
         ${isSignup ? `
           <div class="field"><label>Your name</label><input name="name" required maxlength="80" /></div>
+          <div class="field"><label>Business name</label><input name="businessName" required maxlength="80" placeholder="Book Karo" /></div>
           <div class="field"><label>Username (booking URL)</label><input name="slug" required pattern="[a-z0-9\\-]{2,48}" placeholder="acme-studio" /></div>
         ` : ''}
         <div class="field"><label>Email</label><input name="email" type="email" required /></div>
@@ -544,6 +545,7 @@ async function renderIntegrationsTab(panel) {
 async function renderProfileTab(panel) {
   panel.innerHTML = `
     <form id="profile-form">
+      <div class="field"><label>Business name</label><input name="businessName" value="${escapeHtml(state.user.businessName || '')}" required maxlength="80" placeholder="Book Karo" /></div>
       <div class="field"><label>Display name</label><input name="name" value="${escapeHtml(state.user.name)}" required /></div>
       <div class="field"><label>Username</label><input name="slug" value="${escapeHtml(state.user.slug)}" required /></div>
       <div class="field"><label>Bio</label><textarea name="bio" rows="3">${escapeHtml(state.user.bio || '')}</textarea></div>
@@ -605,7 +607,7 @@ async function viewBook(slug, eventSlug) {
     $('#app').innerHTML = `
       <div class="panel booking-layout">
         <aside class="booking-side">
-          <div class="host">${escapeHtml(meta.user.name)}</div>
+          <div class="host">${escapeHtml(meta.user.businessName || meta.user.name)}</div>
           <h2>${escapeHtml(meta.eventType.name)}</h2>
           <p>${meta.eventType.durationMinutes} min</p>
           <p style="opacity:0.85">${escapeHtml(meta.eventType.description || '')}</p>
