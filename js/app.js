@@ -220,7 +220,7 @@ function viewHome() {
         <a class="btn secondary" href="${url('/login')}">Log in</a>
       </div>
     </section>
-    <div class="panel" style="margin-top:1rem">
+    <div class="panel">
       <h2>How it works</h2>
       <div class="grid-2">
         <div>
@@ -240,7 +240,7 @@ function viewAuth(mode) {
   setMainMode('public');
   const isSignup = mode === 'signup';
   $('#app').innerHTML = `
-    <div class="panel" style="max-width:440px;margin:1.5rem auto">
+    <div class="panel" style="max-width:440px;margin-left:auto;margin-right:auto">
       <h2>${isSignup ? 'Create your Book Karo page' : 'Welcome back'}</h2>
       <p class="muted">${isSignup ? 'Pick a username for your public booking link.' : 'Log in to manage meetings.'}</p>
       <form id="auth-form">
