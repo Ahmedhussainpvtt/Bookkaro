@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Book Karo - Easy Peeze</title>
+  <meta name="description" content="Book Karo by Easy Peeze - create a booking page and let customers schedule meetings." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    (function () {
+      var path = location.pathname;
+      var match = path.match(/^\/Bookkaro(?=\/|$)/i);
+      window.BK_BASE = match ? match[0] : '';
+      window.BK_API = /github\.io$/i.test(location.hostname)
+        ? 'https://book-karo-u4rcttr3nq-el.a.run.app'
+        : '';
+      var css = document.createElement('link');
+      css.rel = 'stylesheet';
+      css.href = window.BK_BASE + '/css/app.css?v=5';
+      document.head.appendChild(css);
+    })();
+  </script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" id="brand-home" href="/">
+        <span class="brand-mark">B</span>
+        <span>Book Karo</span>
+      </a>
+      <div class="top-actions" id="top-actions"></div>
+    </header>
+    <div id="flash" class="hidden" style="width:min(1100px,calc(100% - 2rem));margin:0.75rem auto 0"></div>
+    <main class="main" id="app"></main>
+    <p class="footer-note">Book Karo · Easy Peeze</p>
+  </div>
+  <script>
+    var brand = document.getElementById('brand-home');
+    if (brand) brand.setAttribute('href', (window.BK_BASE || '') + '/');
+    var app = document.createElement('script');
+    app.src = (window.BK_BASE || '') + '/js/app.js?v=5';
+    document.body.appendChild(app);
+  </script>
+</body>
+</html>
