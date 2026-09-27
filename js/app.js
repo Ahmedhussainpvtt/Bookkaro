@@ -27,8 +27,7 @@ const DASH_TABS = [
   { id: 'events', label: 'Event types', icon: '🗓' },
   { id: 'availability', label: 'Availability', icon: '⏰' },
   { id: 'holidays', label: 'Holidays', icon: '🏖' },
-  { id: 'integrations', label: 'Integrations', icon: '🔗' },
-  { id: 'profile', label: 'Profile', icon: '👤' }
+  { id: 'integrations', label: 'Integrations', icon: '🔗' }
 ];
 
 const state = {
@@ -94,6 +93,7 @@ function parseRoute() {
   const parts = path.split('/').filter(Boolean);
   if (path === '/' || path === '') return { name: 'home' };
   if (parts[0] === 'dashboard') return { name: 'dashboard', tab: parts[1] || 'meetings' };
+  if (parts[0] === 'settings') return { name: 'settings' };
   if (parts[0] === 'login') return { name: 'login' };
   if (parts[0] === 'signup') return { name: 'signup' };
   if (parts[0] === 'cancel' && parts[1]) return { name: 'cancel', token: parts[1] };
@@ -124,6 +124,7 @@ function renderTop() {
     actions.innerHTML = `
       <span class="muted">${escapeHtml(state.user.name)}</span>
       <a class="btn secondary" href="${url('/dashboard')}">Dashboard</a>
+      <a class="btn secondary" href="${url('/settings')}">Settings</a>
       <button class="btn ghost" type="button" data-action="logout">Log out</button>
     `;
   } else {
@@ -335,7 +336,6 @@ async function viewDashboard(tab) {
   else if (state.dashTab === 'availability') await renderAvailabilityTab(panel);
   else if (state.dashTab === 'holidays') await renderHolidaysTab(panel);
   else if (state.dashTab === 'integrations') await renderIntegrationsTab(panel);
-  else if (state.dashTab === 'profile') await renderProfileTab(panel);
   else await renderMeetingsTab(panel);
 }
 
@@ -542,15 +542,25 @@ async function renderIntegrationsTab(panel) {
   }
 }
 
-async function renderProfileTab(panel) {
-  panel.innerHTML = `
+function companyFieldsHtml() {
+  const u = state.user || {};
+  return `
+    <h3>Company info</h3>
     <form id="profile-form">
-      <div class="field"><label>Business name</label><input name="businessName" value="${escapeHtml(state.user.businessName || '')}" required maxlength="80" placeholder="Book Karo" /></div>
-      <div class="field"><label>Display name</label><input name="name" value="${escapeHtml(state.user.name)}" required /></div>
-      <div class="field"><label>Username</label><input name="slug" value="${escapeHtml(state.user.slug)}" required /></div>
-      <div class="field"><label>Bio</label><textarea name="bio" rows="3">${escapeHtml(state.user.bio || '')}</textarea></div>
-      <div class="field"><label>Timezone</label><input name="timezone" value="${escapeHtml(state.user.timezone || 'Asia/Kolkata')}" /></div>
-      <button class="btn" type="submit">Save profile</button>
+      <div class="field"><label>Business name</label><input name="businessName" value="${escapeHtml(u.businessName || '')}" required maxlength="80" placeholder="Book Karo" /></div>
+      <div class="field"><label>Display name</label><input name="name" value="${escapeHtml(u.name || '')}" required /></div>
+      <div class="field"><label>Email</label><input value="${escapeHtml(u.email || '')}" disabled /></div>
+      <div class="field"><label>Username</label><input name="slug" value="${escapeHtml(u.slug || '')}" required /></div>
+      <div class="field"><label>Bio</label><textarea name="bio" rows="3">${escapeHtml(u.bio || '')}</textarea></div>
+      <div class="field"><label>Timezone</label><input name="timezone" value="${escapeHtml(u.timezone || 'Asia/Kolkata')}" /></div>
+      <button class="btn" type="submit">Save company info</button>
+    </form>
+    <h3 style="margin-top:1.25rem">Password</h3>
+    <form id="password-form">
+      <div class="field"><label>Current password</label><input name="currentPassword" type="password" required /></div>
+      <div class="field"><label>New password</label><input name="newPassword" type="password" required minlength="8" /></div>
+      <div class="field"><label>Confirm new password</label><input name="confirmPassword" type="password" required minlength="8" /></div>
+      <button class="btn" type="submit">Update password</button>
     </form>
   `;
 }
@@ -743,6 +753,47 @@ async function viewCancel(token) {
   }
 }
 
+async function viewSettings() {
+  if (!state.token) {
+    navigate('/login');
+    return;
+  }
+  await ensureMe();
+  if (!state.user) {
+    navigate('/login');
+    return;
+  }
+  state.dashTab = '';
+  setMainMode('dashboard');
+  const link = publicHref(`/${state.user.slug}`);
+  $('#app').innerHTML = `
+    <div class="dash-shell">
+      <aside class="dash-sidebar">
+        <div class="side-brand">
+          <span class="brand-mark">B</span>
+          <span>Book Karo</span>
+        </div>
+        <nav class="side-nav">${sidebarHtml('')}</nav>
+        <div class="side-foot">
+          <a class="side-link" href="${url(`/${state.user.slug}`)}" target="_blank">View booking page ↗</a>
+        </div>
+      </aside>
+      <section class="dash-main">
+        <header class="dash-header">
+          <div>
+            <h1>Settings</h1>
+            <p class="muted dash-linkline">
+              ${escapeHtml(link)}
+              <button type="button" class="linkish" data-action="copy-link">Copy</button>
+            </p>
+          </div>
+        </header>
+        <div class="panel dash-panel" id="dash-panel">${companyFieldsHtml()}</div>
+      </section>
+    </div>
+  `;
+}
+
 async function route() {
   clearFlash();
   const r = parseRoute();
@@ -751,7 +802,14 @@ async function route() {
   if (r.name === 'home') viewHome();
   else if (r.name === 'login') viewAuth('login');
   else if (r.name === 'signup') viewAuth('signup');
-  else if (r.name === 'dashboard') await viewDashboard(r.tab || 'meetings');
+  else if (r.name === 'dashboard') {
+    if (r.tab === 'profile' || r.tab === 'settings') {
+      navigate('/settings', true);
+      return;
+    }
+    await viewDashboard(r.tab || 'meetings');
+  }
+  else if (r.name === 'settings') await viewSettings();
   else if (r.name === 'landing') await viewLanding(r.slug);
   else if (r.name === 'book') await viewBook(r.slug, r.eventSlug);
   else if (r.name === 'cancel') await viewCancel(r.token);
@@ -1010,7 +1068,31 @@ document.addEventListener('submit', async (e) => {
       });
       state.user = data.user;
       renderTop();
-      toastOk('Profile saved');
+      toastOk('Company info saved');
+    } catch (err) {
+      toastErr(err.message);
+    }
+    return;
+  }
+
+  if (form.id === 'password-form') {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const next = String(fd.get('newPassword') || '');
+    if (next !== String(fd.get('confirmPassword') || '')) {
+      toastErr('New passwords do not match');
+      return;
+    }
+    try {
+      await api('/api/me/password', {
+        method: 'POST',
+        body: JSON.stringify({
+          currentPassword: fd.get('currentPassword'),
+          newPassword: next
+        })
+      });
+      form.reset();
+      toastOk('Password updated');
     } catch (err) {
       toastErr(err.message);
     }
